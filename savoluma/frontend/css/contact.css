@@ -1,0 +1,26 @@
+/* SavoLuma — contact.css */
+
+.page-hero {
+  background: linear-gradient(180deg, var(--blue-050) 0%, #fff 100%);
+  padding: 72px 0 48px;
+  border-bottom: 1px solid var(--line);
+}
+.page-hero .hero-lead { max-width: 60ch; margin-top: 12px; }
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+.contact-grid form { padding: 32px; }
+.contact-side { display: flex; flex-direction: column; gap: 20px; }
+.map-frame {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .contact-grid { grid-template-columns: 1fr; }
+}

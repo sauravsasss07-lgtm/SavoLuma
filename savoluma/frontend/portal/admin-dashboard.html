@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+  // Synchronous pre-render access check. Runs before any CSS/body paints,
+  // so an unauthenticated or wrong-role visit never shows so much as a
+  // flash of this page's shell — it redirects immediately. This is a
+  // client-side hardening layer; the actual security boundary is the
+  // backend REST API (see backend/src/main/java/com/savoluma/config/
+  // SecurityConfig.java), which independently rejects any request without
+  // a valid ADMIN JWT regardless of what the browser does here.
+  (function() {
+    try {
+      var raw = localStorage.getItem('savoluma_session_v1');
+      var session = raw ? JSON.parse(raw) : null;
+      if (!session || session.role !== 'ADMIN') {
+        window.location.replace('admin-login.html');
+      }
+    } catch (e) {
+      window.location.replace('admin-login.html');
+    }
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — SavoLuma</title>
+<link rel="icon" type="image/jpeg" href="../assets/images/favicon.jpeg">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/admin-dashboard.css">
+</head>
+<body class="dash-body">
+
+<div class="dash-shell">
+  <aside class="dash-sidebar">
+    <div class="brand-row"><img src="../assets/images/logo.jpeg" alt="SavoLuma"></div>
+    <div class="role-pill">ADMIN WORKSPACE</div>
+    <nav class="dash-nav">
+      <button class="active" data-panel="panel-overview" data-title="Overview">Overview</button>
+      <button data-panel="panel-employees" data-title="Employees">Employees</button>
+      <button data-panel="panel-roles" data-title="Roles &amp; Permissions">Roles &amp; Permissions</button>
+      <button data-panel="panel-projects" data-title="Projects">Projects</button>
+      <button data-panel="panel-crm" data-title="CRM — Leads">CRM (Leads)</button>
+      <button data-panel="panel-support" data-title="Support Tickets">Support Tickets</button>
+      <button data-panel="panel-clients" data-title="Clients &amp; Testimonials">Clients &amp; Testimonials</button>
+      <button data-panel="panel-careers" data-title="Careers">Careers</button>
+      <button data-panel="panel-audit" data-title="Audit Logs">Audit Logs</button>
+      <button data-panel="panel-settings" data-title="System Settings">System Settings</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar-circle" id="sidebarAvatar"></div>
+        <div><div class="user-name" id="sidebarUserName"></div><div class="user-role" id="sidebarUserRole"></div></div>
+      </div>
+      <button class="logout-btn" data-logout="index.html">Log out</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-topbar">
+      <h2 id="topbarTitle">Overview</h2>
+      <span class="badge badge-blue">ADMIN</span>
+    </div>
+
+    <div class="dash-content">
+
+      <!-- OVERVIEW -->
+      <section class="dash-panel active" id="panel-overview">
+        <div class="stat-row" id="statRow"></div>
+        <div class="panel-card">
+          <div class="panel-title"><h3>Active Projects</h3></div>
+          <div class="table-scroll"><table class="dash-table" id="overviewProjectsTable"></table></div>
+        </div>
+      </section>
+
+      <!-- EMPLOYEES -->
+      <section class="dash-panel" id="panel-employees">
+        <div class="panel-card">
+          <div class="panel-title">
+            <h3>All Employees</h3>
+            <button class="btn btn-primary btn-sm" data-modal-open="addEmployeeModal">+ Add Employee</button>
+          </div>
+          <div class="table-scroll"><table class="dash-table" id="employeesTable"></table></div>
+        </div>
+      </section>
+
+      <!-- ROLES & PERMISSIONS -->
+      <section class="dash-panel" id="panel-roles">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Roles &amp; Permissions</h3></div>
+          <p class="field-hint">This is the private, admin-only control panel described in the spec: change what each role in the company can see and do. Every change here is written to the audit log.</p>
+          <div id="rolesList"></div>
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section class="dash-panel" id="panel-projects">
+        <div class="panel-card">
+          <div class="panel-title">
+            <h3>All Projects</h3>
+            <button class="btn btn-primary btn-sm" data-modal-open="addProjectModal">+ New Project</button>
+          </div>
+          <div class="table-scroll"><table class="dash-table" id="projectsTable"></table></div>
+        </div>
+      </section>
+
+      <!-- CRM -->
+      <section class="dash-panel" id="panel-crm">
+        <div class="panel-card">
+          <div class="panel-title">
+            <h3>Leads</h3>
+            <button class="btn btn-primary btn-sm" data-modal-open="addLeadModal">+ New Lead</button>
+          </div>
+          <div class="table-scroll"><table class="dash-table" id="leadsTable"></table></div>
+        </div>
+      </section>
+
+      <!-- SUPPORT -->
+      <section class="dash-panel" id="panel-support">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Support Tickets</h3></div>
+          <div class="table-scroll"><table class="dash-table" id="ticketsTable"></table></div>
+        </div>
+      </section>
+
+      <!-- CLIENTS -->
+      <section class="dash-panel" id="panel-clients">
+        <div class="panel-card">
+          <div class="panel-title">
+            <h3>Clients (shown on public site)</h3>
+            <button class="btn btn-primary btn-sm" data-modal-open="addClientModal">+ Add Client</button>
+          </div>
+          <div class="table-scroll"><table class="dash-table" id="clientsTable"></table></div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-title">
+            <h3>Testimonials</h3>
+            <button class="btn btn-primary btn-sm" data-modal-open="addTestimonialModal">+ Add Testimonial</button>
+          </div>
+          <div class="table-scroll"><table class="dash-table" id="testimonialsTable"></table></div>
+        </div>
+      </section>
+
+      <!-- CAREERS -->
+      <section class="dash-panel" id="panel-careers">
+        <div class="panel-card">
+          <div class="panel-title">
+            <h3>Job Openings</h3>
+            <button class="btn btn-primary btn-sm" data-modal-open="addJobModal">+ Post Job</button>
+          </div>
+          <div class="table-scroll"><table class="dash-table" id="jobsTable"></table></div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-title"><h3>Applications Received</h3></div>
+          <div class="table-scroll"><table class="dash-table" id="applicationsTable"></table></div>
+        </div>
+      </section>
+
+      <!-- AUDIT -->
+      <section class="dash-panel" id="panel-audit">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Audit Logs</h3></div>
+          <p class="field-hint">Read-only. Every create/update/delete/role-change action across the platform is recorded here with the acting user and timestamp.</p>
+          <div class="table-scroll"><table class="dash-table" id="auditTable"></table></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="dash-panel" id="panel-settings">
+        <div class="panel-card">
+          <div class="panel-title"><h3>System Settings</h3></div>
+          <div class="field">
+            <label>Two-Factor Authentication (2FA)</label>
+            <div class="flex-between" style="max-width:420px;">
+              <span class="field-hint" style="margin:0;">Require 2FA for ADMIN and CEO logins</span>
+              <label class="switch"><input type="checkbox" id="toggle2FA" checked><span class="slider"></span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Session timeout</label>
+            <select id="sessionTimeout" style="max-width:220px;">
+              <option>15 minutes</option>
+              <option selected>30 minutes</option>
+              <option>60 minutes</option>
+            </select>
+          </div>
+          <p class="field-hint">On the real backend, 2FA is enforced server-side via a one-time code step in Spring Security's authentication filter chain before a JWT is issued — see the backend/README for where this hooks in.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal-overlay" id="addEmployeeModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Add Employee</h3><button class="modal-close" data-modal-close>&times;</button></div>
+    <form id="addEmployeeForm">
+      <div class="form-row">
+        <div class="field"><label>Full name</label><input id="neName" required></div>
+        <div class="field"><label>Email</label><input id="neEmail" type="email" required></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Role</label>
+          <select id="neRole"><option value="EMPLOYEE">Employee</option><option value="MANAGER">Manager</option><option value="HR">HR</option><option value="ADMIN">Admin</option></select>
+        </div>
+        <div class="field"><label>Department</label><input id="neDept" value="Engineering"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Team</label><input id="neTeam" placeholder="e.g. Alpha Squad"></div>
+        <div class="field"><label>Username</label><input id="neUsername" required></div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Create Employee</button>
+    </form>
+  </div>
+</div>
+
+<!-- Add Project Modal -->
+<div class="modal-overlay" id="addProjectModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>New Project</h3><button class="modal-close" data-modal-close>&times;</button></div>
+    <form id="addProjectForm">
+      <div class="field"><label>Project name</label><input id="npName" required></div>
+      <div class="field"><label>Client</label><input id="npClient" required></div>
+      <div class="field"><label>Assign manager</label><select id="npManager"></select></div>
+      <button type="submit" class="btn btn-primary btn-block">Create Project</button>
+    </form>
+  </div>
+</div>
+
+<!-- Add Lead Modal -->
+<div class="modal-overlay" id="addLeadModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>New Lead</h3><button class="modal-close" data-modal-close>&times;</button></div>
+    <form id="addLeadForm">
+      <div class="field"><label>Name</label><input id="nlName" required></div>
+      <div class="field"><label>Company</label><input id="nlCompany" required></div>
+      <div class="field"><label>Email</label><input id="nlEmail" type="email" required></div>
+      <div class="field"><label>Source</label>
+        <select id="nlSource"><option>WEBSITE</option><option>REFERRAL</option><option>LINKEDIN</option><option>ADVERTISEMENT</option><option>OTHER</option></select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Add Lead</button>
+    </form>
+  </div>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal-overlay" id="addClientModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Add Client</h3><button class="modal-close" data-modal-close>&times;</button></div>
+    <form id="addClientForm">
+      <div class="field"><label>Client display name</label><input id="ncName" required placeholder="e.g. Acme Corp"></div>
+      <button type="submit" class="btn btn-primary btn-block">Add Client</button>
+    </form>
+  </div>
+</div>
+
+<!-- Add Testimonial Modal -->
+<div class="modal-overlay" id="addTestimonialModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Add Testimonial</h3><button class="modal-close" data-modal-close>&times;</button></div>
+    <form id="addTestimonialForm">
+      <div class="field"><label>Quote</label><textarea id="ntQuote" rows="3" required></textarea></div>
+      <div class="field"><label>Author name</label><input id="ntAuthor" required></div>
+      <div class="field"><label>Author title / company</label><input id="ntTitle" required></div>
+      <button type="submit" class="btn btn-primary btn-block">Add Testimonial</button>
+    </form>
+  </div>
+</div>
+
+<!-- Add Job Modal -->
+<div class="modal-overlay" id="addJobModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Post Job</h3><button class="modal-close" data-modal-close>&times;</button></div>
+    <form id="addJobForm">
+      <div class="field"><label>Title</label><input id="njTitle" required></div>
+      <div class="field"><label>Team</label><input id="njTeam" value="Engineering"></div>
+      <div class="field"><label>Location</label><input id="njLocation" value="New Delhi / Remote"></div>
+      <div class="field"><label>Type</label><select id="njType"><option>Full-time</option><option>Contract</option><option>Internship</option></select></div>
+      <button type="submit" class="btn btn-primary btn-block">Post Job</button>
+    </form>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/dashboard-common.js"></script>
+<script src="../js/admin-dashboard.js"></script>
+</body>
+</html>

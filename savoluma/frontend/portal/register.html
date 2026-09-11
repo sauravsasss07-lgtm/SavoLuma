@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+  // Registration creates real employee accounts — this must never be
+  // reachable by a direct URL visit without an ADMIN or HR session.
+  // Client-side hardening layer only; the real boundary is the backend's
+  // POST /api/v1/users endpoint, which independently requires
+  // hasAnyRole('SUPER_ADMIN','ADMIN','HR') — see UserController.java.
+  (function() {
+    try {
+      var raw = localStorage.getItem('savoluma_session_v1');
+      var session = raw ? JSON.parse(raw) : null;
+      if (!session || (session.role !== 'ADMIN' && session.role !== 'HR')) {
+        window.location.replace('index.html');
+      }
+    } catch (e) {
+      window.location.replace('index.html');
+    }
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Registration — SavoLuma Portal</title>
+<link rel="icon" type="image/jpeg" href="../assets/images/favicon.jpeg">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/portal-login.css">
+</head>
+<body class="portal-body">
+
+<header class="portal-header">
+  <div class="container flex-between">
+    <a href="../index.html" class="brand"><img src="../assets/images/logo.jpeg" alt="SavoLuma logo"></a>
+    <a href="index.html" class="btn btn-ghost btn-sm">← All logins</a>
+  </div>
+</header>
+
+<main class="portal-main">
+  <div class="auth-card" style="max-width:520px;">
+    <span class="badge badge-grey auth-role-tag">HR / ADMIN ONLY</span>
+    <h2>New Employee Registration</h2>
+    <p class="auth-sub">This form is used internally by HR or Admin to onboard a new hire. A unique Employee ID and login credentials are generated automatically. On the real backend this is a protected endpoint (POST /api/v1/users) callable only by HR/ADMIN roles.</p>
+    <div class="auth-error" id="authError"></div>
+    <div id="registerResult" class="auth-demo-hint" style="display:none;"></div>
+
+    <form id="registerForm">
+      <div class="form-row">
+        <div class="field"><label for="regName">Full name</label><input id="regName" required></div>
+        <div class="field"><label for="regEmail">Email</label><input id="regEmail" type="email" required></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="regPhone">Mobile number</label><input id="regPhone" required></div>
+        <div class="field"><label for="regRole">Role</label>
+          <select id="regRole" required>
+            <option value="EMPLOYEE">Employee</option>
+            <option value="MANAGER">Manager</option>
+            <option value="HR">HR</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="regDept">Department</label><input id="regDept" value="Engineering" required></div>
+        <div class="field"><label for="regTeam">Team</label><input id="regTeam" placeholder="e.g. Alpha Squad"></div>
+      </div>
+      <div class="field"><label for="regManager">Reporting manager</label><select id="regManager"></select></div>
+      <div class="field"><label for="regUsername">Login username</label><input id="regUsername" required></div>
+      <div class="field"><label for="regPassword">Temporary password</label><input id="regPassword" type="text" required value="Welcome@123"></div>
+      <button type="submit" class="btn btn-primary btn-block">Create Employee</button>
+    </form>
+    <div class="auth-links"><a href="admin-login.html">Go to Admin login</a><a href="hr-login.html">Go to HR login</a></div>
+  </div>
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/register.js"></script>
+</body>
+</html>

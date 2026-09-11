@@ -1,0 +1,39 @@
+/* SavoLuma — hr-dashboard.css */
+
+.emp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.emp-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  background: #fff;
+  transition: border-color 0.15s ease;
+}
+.emp-card:hover { border-color: var(--blue-500); }
+.emp-card .emp-photo {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  background: var(--blue-050);
+  color: var(--blue-500);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head);
+  font-weight: 700;
+  overflow: hidden;
+}
+.emp-card .emp-photo img { width: 100%; height: 100%; object-fit: cover; }
+.emp-card h4 { font-size: 0.95rem; margin: 0 0 2px; }
+.emp-card .emp-sub { font-size: 0.78rem; color: var(--ink-soft); }
+
+.team-block { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 12px; }
+.team-block h4 { margin-bottom: 8px; }
+.team-block .team-members { display: flex; flex-wrap: wrap; gap: 8px; }
+.team-member-chip { font-size: 0.8rem; padding: 5px 12px; border-radius: 100px; background: var(--surface-alt); border: 1px solid var(--line); }
+
+@media (max-width: 1024px) { .emp-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 700px) { .emp-grid { grid-template-columns: repeat(2, 1fr); } }

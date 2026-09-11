@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+  // Synchronous pre-render access check. Runs before any CSS/body paints,
+  // so an unauthenticated or wrong-role visit never shows so much as a
+  // flash of this page's shell — it redirects immediately. This is a
+  // client-side hardening layer; the actual security boundary is the
+  // backend REST API (see backend/src/main/java/com/savoluma/config/
+  // SecurityConfig.java), which independently rejects any request without
+  // a valid HR JWT regardless of what the browser does here.
+  (function() {
+    try {
+      var raw = localStorage.getItem('savoluma_session_v1');
+      var session = raw ? JSON.parse(raw) : null;
+      if (!session || session.role !== 'HR') {
+        window.location.replace('hr-login.html');
+      }
+    } catch (e) {
+      window.location.replace('hr-login.html');
+    }
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Dashboard — SavoLuma</title>
+<link rel="icon" type="image/jpeg" href="../assets/images/favicon.jpeg">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/hr-dashboard.css">
+</head>
+<body class="dash-body">
+
+<div class="dash-shell">
+  <aside class="dash-sidebar">
+    <div class="brand-row"><img src="../assets/images/logo.jpeg" alt="SavoLuma"></div>
+    <div class="role-pill">HR WORKSPACE</div>
+    <nav class="dash-nav">
+      <button class="active" data-panel="panel-directory" data-title="Employee Directory">Employee Directory</button>
+      <button data-panel="panel-teams" data-title="Teams">Teams</button>
+      <button data-panel="panel-recruitment" data-title="Recruitment">Recruitment</button>
+      <button data-panel="panel-leave" data-title="Leave Management">Leave Management</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar-circle" id="sidebarAvatar"></div>
+        <div><div class="user-name" id="sidebarUserName"></div><div class="user-role" id="sidebarUserRole"></div></div>
+      </div>
+      <button class="logout-btn" data-logout="index.html">Log out</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-topbar">
+      <h2 id="topbarTitle">Employee Directory</h2>
+      <span class="badge badge-blue">HR</span>
+    </div>
+
+    <div class="dash-content">
+
+      <!-- DIRECTORY -->
+      <section class="dash-panel active" id="panel-directory">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Search employees</h3></div>
+          <input id="empSearch" placeholder="Search by name, ID, role, department or team..." style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:18px;">
+          <div class="emp-grid" id="empGrid"></div>
+        </div>
+        <p class="locked-note">HR can view and update employee records but cannot see CRM deal notes, client confidential data, source code, or company financials — those stay outside this workspace.</p>
+      </section>
+
+      <!-- TEAMS -->
+      <section class="dash-panel" id="panel-teams">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Team-wise breakdown</h3></div>
+          <div id="teamsList"></div>
+        </div>
+      </section>
+
+      <!-- RECRUITMENT -->
+      <section class="dash-panel" id="panel-recruitment">
+        <div class="panel-card">
+          <div class="panel-title">
+            <h3>Job openings</h3>
+            <button class="btn btn-primary btn-sm" data-modal-open="hrJobModal">+ Post Job</button>
+          </div>
+          <div class="table-scroll"><table class="dash-table" id="hrJobsTable"></table></div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-title"><h3>Applications</h3></div>
+          <div class="table-scroll"><table class="dash-table" id="hrApplicationsTable"></table></div>
+        </div>
+      </section>
+
+      <!-- LEAVE -->
+      <section class="dash-panel" id="panel-leave">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Leave requests</h3></div>
+          <div class="empty-state">No pending leave requests. Employees submit leave requests from their own dashboard (Employee → My Leave Requests).</div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Employee detail / photo modal -->
+<div class="modal-overlay" id="empDetailModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Employee Record</h3><button class="modal-close" data-modal-close>&times;</button></div>
+    <div id="empDetailBody"></div>
+  </div>
+</div>
+
+<!-- Post job modal -->
+<div class="modal-overlay" id="hrJobModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Post Job</h3><button class="modal-close" data-modal-close>&times;</button></div>
+    <form id="hrJobForm">
+      <div class="field"><label>Title</label><input id="hjTitle" required></div>
+      <div class="field"><label>Team</label><input id="hjTeam" value="Engineering"></div>
+      <div class="field"><label>Location</label><input id="hjLocation" value="New Delhi / Remote"></div>
+      <div class="field"><label>Type</label><select id="hjType"><option>Full-time</option><option>Contract</option><option>Internship</option></select></div>
+      <button type="submit" class="btn btn-primary btn-block">Post Job</button>
+    </form>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/dashboard-common.js"></script>
+<script src="../js/hr-dashboard.js"></script>
+</body>
+</html>

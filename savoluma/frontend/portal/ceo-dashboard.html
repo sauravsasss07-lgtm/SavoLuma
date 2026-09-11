@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+  // Synchronous pre-render access check. Runs before any CSS/body paints,
+  // so an unauthenticated or wrong-role visit never shows so much as a
+  // flash of this page's shell — it redirects immediately. This is a
+  // client-side hardening layer; the actual security boundary is the
+  // backend REST API (see backend/src/main/java/com/savoluma/config/
+  // SecurityConfig.java), which independently rejects any request without
+  // a valid CEO JWT regardless of what the browser does here.
+  (function() {
+    try {
+      var raw = localStorage.getItem('savoluma_session_v1');
+      var session = raw ? JSON.parse(raw) : null;
+      if (!session || session.role !== 'CEO') {
+        window.location.replace('ceo-login.html');
+      }
+    } catch (e) {
+      window.location.replace('ceo-login.html');
+    }
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEO Dashboard — SavoLuma</title>
+<link rel="icon" type="image/jpeg" href="../assets/images/favicon.jpeg">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/ceo-dashboard.css">
+</head>
+<body class="dash-body">
+
+<div class="dash-shell">
+  <aside class="dash-sidebar">
+    <div class="brand-row"><img src="../assets/images/logo.jpeg" alt="SavoLuma"></div>
+    <div class="role-pill">CEO WORKSPACE</div>
+    <nav class="dash-nav">
+      <button class="active" data-panel="panel-overview" data-title="Company Overview">Company Overview</button>
+      <button data-panel="panel-projects" data-title="All Projects">All Projects</button>
+      <button data-panel="panel-people" data-title="All Employees">All Employees</button>
+      <button data-panel="panel-sales" data-title="Sales &amp; Leads">Sales &amp; Leads</button>
+      <button data-panel="panel-finance" data-title="Revenue &amp; Finance">Revenue &amp; Finance</button>
+      <button data-panel="panel-support" data-title="Support Overview">Support Overview</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar-circle" id="sidebarAvatar"></div>
+        <div><div class="user-name" id="sidebarUserName"></div><div class="user-role" id="sidebarUserRole"></div></div>
+      </div>
+      <button class="logout-btn" data-logout="index.html">Log out</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-topbar">
+      <h2 id="topbarTitle">Company Overview</h2>
+      <span class="badge badge-blue">CEO — full access</span>
+    </div>
+
+    <div class="dash-content">
+
+      <section class="dash-panel active" id="panel-overview">
+        <div class="stat-row" id="statRow"></div>
+        <div class="panel-card">
+          <div class="panel-title"><h3>Org snapshot</h3></div>
+          <div class="org-grid" id="orgGrid"></div>
+        </div>
+      </section>
+
+      <section class="dash-panel" id="panel-projects">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Currently running &amp; completed projects</h3></div>
+          <div class="table-scroll"><table class="dash-table" id="ceoProjectsTable"></table></div>
+        </div>
+      </section>
+
+      <section class="dash-panel" id="panel-people">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Every employee, every team</h3></div>
+          <div class="table-scroll"><table class="dash-table" id="ceoPeopleTable"></table></div>
+        </div>
+      </section>
+
+      <section class="dash-panel" id="panel-sales">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Sales pipeline</h3></div>
+          <div class="table-scroll"><table class="dash-table" id="ceoLeadsTable"></table></div>
+        </div>
+      </section>
+
+      <section class="dash-panel" id="panel-finance">
+        <div class="panel-card">
+          <div class="panel-title"><h3>Revenue &amp; finance</h3></div>
+          <p class="locked-note">Figures below are placeholders — this demo does not fabricate real revenue numbers. Wire this panel to the Finance module's /api/v1/reports/finance endpoint once available.</p>
+          <div class="stat-row">
+            <div class="stat-card"><div class="stat-label">Revenue (YTD)</div><div class="stat-value">—</div><div class="stat-sub">Connect Finance module</div></div>
+            <div class="stat-card"><div class="stat-label">Invoices outstanding</div><div class="stat-value">—</div><div class="stat-sub">Connect Finance module</div></div>
+            <div class="stat-card"><div class="stat-label">Active contracts</div><div class="stat-value" id="ceoActiveContracts">0</div><div class="stat-sub">From active projects</div></div>
+            <div class="stat-card"><div class="stat-label">Pipeline value</div><div class="stat-value">—</div><div class="stat-sub">Connect CRM deal values</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dash-panel" id="panel-support">
+        <div class="panel-card">
+          <div class="panel-title"><h3>All support tickets</h3></div>
+          <div class="table-scroll"><table class="dash-table" id="ceoTicketsTable"></table></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/dashboard-common.js"></script>
+<script src="../js/ceo-dashboard.js"></script>
+</body>
+</html>

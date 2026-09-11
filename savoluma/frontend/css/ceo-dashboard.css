@@ -1,0 +1,19 @@
+/* SavoLuma — ceo-dashboard.css */
+
+.org-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.org-tile {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+.org-tile .org-count { font-family: var(--font-head); font-size: 1.4rem; font-weight: 700; color: var(--navy-900); }
+.org-tile .org-label { font-size: 0.8rem; color: var(--ink-soft); margin-top: 4px; }
+
+@media (max-width: 700px) {
+  .org-grid { grid-template-columns: 1fr 1fr; }
+}

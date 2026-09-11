@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SavoLuma Portal — Sign in</title>
+<link rel="icon" type="image/jpeg" href="../assets/images/favicon.jpeg">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/portal-login.css">
+</head>
+<body class="portal-body">
+
+<header class="portal-header">
+  <div class="container flex-between">
+    <a href="../index.html" class="brand"><img src="../assets/images/logo.jpeg" alt="SavoLuma logo"></a>
+    <a href="../index.html" class="btn btn-ghost btn-sm">← Back to website</a>
+  </div>
+</header>
+
+<main class="portal-main">
+  <div style="width:100%;display:flex;flex-direction:column;align-items:center;">
+    <div class="hub-intro text-center">
+      <span class="eyebrow-label">Internal Portal</span>
+      <h1>Sign in to your workspace.</h1>
+      <p style="margin-left:auto;margin-right:auto;">This area is private and not indexed for public access. Choose your role below — each role has its own login and only ever sees the data it is authorized for.</p>
+    </div>
+    <div class="role-grid">
+      <a class="role-card" href="admin-login.html">
+        <div class="role-icon">AD</div>
+        <h3>Admin</h3>
+        <p>User management, CRM, projects, support, roles &amp; permissions, audit logs.</p>
+      </a>
+      <a class="role-card" href="ceo-login.html">
+        <div class="role-icon">CE</div>
+        <h3>CEO</h3>
+        <p>Full visibility across every project, team, and business metric.</p>
+      </a>
+      <a class="role-card" href="hr-login.html">
+        <div class="role-icon">HR</div>
+        <h3>HR</h3>
+        <p>Employee directory, recruitment, job postings, and team-wise records.</p>
+      </a>
+      <a class="role-card" href="manager-login.html">
+        <div class="role-icon">MG</div>
+        <h3>Manager</h3>
+        <p>Team workspace — assign tasks, track projects, review attendance.</p>
+      </a>
+      <a class="role-card" href="employee-login.html">
+        <div class="role-icon">EM</div>
+        <h3>Employee</h3>
+        <p>Your profile, your tasks, your team, and your project status.</p>
+      </a>
+      <a class="role-card" href="register.html">
+        <div class="role-icon">+</div>
+        <h3>New Employee Registration</h3>
+        <p>Used by Admin/HR to onboard a new employee and generate an Employee ID.</p>
+      </a>
+    </div>
+  </div>
+</main>
+
+<script src="../js/data.js"></script>
+</body>
+</html>

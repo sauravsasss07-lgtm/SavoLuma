@@ -1,0 +1,217 @@
+/* ==========================================================================
+   SavoLuma — dashboard.css
+   Shared shell for every internal dashboard (Admin, CEO, HR, Manager,
+   Employee). Role-specific visuals live in their own *-dashboard.css.
+   ========================================================================== */
+
+body.dash-body { background: var(--surface-alt); }
+
+.dash-shell {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  min-height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+.dash-sidebar {
+  background: var(--navy-900);
+  color: #C7D2E0;
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.dash-sidebar .brand-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px 22px; }
+.dash-sidebar .brand-row img { height: 26px; }
+.dash-sidebar .role-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--blue-400);
+  padding: 2px 10px 18px;
+}
+.dash-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.dash-nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #C7D2E0;
+  padding: 11px 12px;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.dash-nav button:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.dash-nav button.active { background: var(--blue-500); color: #fff; }
+.dash-sidebar .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.12); padding-top: 14px; margin-top: 14px; }
+.dash-sidebar .sidebar-footer .user-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.avatar-circle {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--blue-500);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-family: var(--font-head);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+.sidebar-footer .user-name { color: #fff; font-size: 0.88rem; font-weight: 600; }
+.sidebar-footer .user-role { font-size: 0.76rem; color: #90A0B8; }
+.logout-btn {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  padding: 9px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.logout-btn:hover { background: rgba(255,255,255,0.12); }
+
+/* ---------- Main area ---------- */
+.dash-main { padding: 0; }
+.dash-topbar {
+  height: 68px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.dash-topbar h2 { margin: 0; font-size: 1.25rem; }
+.dash-content { padding: 28px; }
+.dash-panel { display: none; }
+.dash-panel.active { display: block; }
+
+/* ---------- Stat cards ---------- */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.stat-card .stat-label { font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 6px; }
+.stat-card .stat-value { font-family: var(--font-head); font-size: 1.7rem; font-weight: 700; color: var(--navy-900); }
+.stat-card .stat-sub { font-size: 0.76rem; color: var(--ink-soft); margin-top: 4px; }
+
+/* ---------- Panels / cards ---------- */
+.panel-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.panel-card .panel-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.panel-card .panel-title h3 { margin: 0; }
+
+/* ---------- Tables ---------- */
+.dash-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.dash-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--line);
+}
+.dash-table td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.dash-table tr:last-child td { border-bottom: none; }
+.table-actions { display: flex; gap: 8px; }
+.table-scroll { overflow-x: auto; }
+
+/* ---------- Progress bar ---------- */
+.progress-track { background: #E9EDF3; border-radius: 100px; height: 8px; overflow: hidden; }
+.progress-fill { background: var(--blue-500); height: 100%; border-radius: 100px; }
+
+/* ---------- Tabs (for filtering) ---------- */
+.tab-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.tab-chip {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 7px 14px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+.tab-chip.active { background: var(--navy-900); color: #fff; border-color: var(--navy-900); }
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10,26,51,0.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+.modal-box .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.modal-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--ink-soft); line-height: 1; }
+
+/* ---------- Empty / locked states ---------- */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--ink-soft); }
+.locked-note {
+  background: #FBF1DD;
+  color: var(--warning);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  margin-bottom: 16px;
+}
+
+/* ---------- Kanban (tasks) ---------- */
+.kanban-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.kanban-col { background: var(--surface-alt); border-radius: var(--radius-lg); padding: 14px; min-height: 120px; }
+.kanban-col h4 { font-size: 0.85rem; margin-bottom: 10px; display: flex; justify-content: space-between; }
+.kanban-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; font-size: 0.86rem; }
+.kanban-card .k-meta { font-size: 0.75rem; color: var(--ink-soft); margin-top: 6px; display: flex; justify-content: space-between; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .stat-row { grid-template-columns: repeat(2, 1fr); }
+  .kanban-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  .dash-shell { grid-template-columns: 1fr; }
+  .dash-sidebar { position: relative; height: auto; }
+}
+@media (max-width: 560px) {
+  .stat-row { grid-template-columns: 1fr; }
+  .kanban-row { grid-template-columns: 1fr; }
+  .dash-content { padding: 16px; }
+}

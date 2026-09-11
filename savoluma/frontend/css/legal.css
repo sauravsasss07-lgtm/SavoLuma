@@ -1,0 +1,47 @@
+/* SavoLuma — legal.css
+   Shared by terms.html, privacy.html, cookies.html, faq.html, blog.html */
+
+.page-hero {
+  background: linear-gradient(180deg, var(--blue-050) 0%, #fff 100%);
+  padding: 64px 0 40px;
+  border-bottom: 1px solid var(--line);
+}
+.page-hero .hero-lead { max-width: 60ch; margin-top: 12px; }
+
+.legal-body {
+  max-width: 74ch;
+}
+.legal-body h3 { margin-top: 32px; }
+.legal-body p { max-width: none; }
+
+/* FAQ accordion */
+.faq-list { max-width: 74ch; display: flex; flex-direction: column; gap: 10px; }
+.faq-item { border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+.faq-q {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 16px 20px;
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 0.98rem;
+  color: var(--navy-900);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.faq-a {
+  padding: 0 20px 16px 20px;
+  display: none;
+  color: var(--ink-soft);
+}
+.faq-item.open .faq-a { display: block; }
+.faq-item.open .faq-q .chev { transform: rotate(180deg); }
+.chev { transition: transform 0.15s ease; }
+
+/* Blog */
+.blog-list { display: flex; flex-direction: column; gap: 18px; max-width: 80ch; }
+.blog-item { border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 24px; background: #fff; }
+.blog-item .blog-date { font-size: 0.82rem; color: var(--ink-soft); }

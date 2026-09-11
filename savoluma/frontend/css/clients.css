@@ -1,0 +1,46 @@
+/* SavoLuma — clients.css */
+
+.page-hero {
+  background: linear-gradient(180deg, var(--blue-050) 0%, #fff 100%);
+  padding: 72px 0 48px;
+  border-bottom: 1px solid var(--line);
+}
+.page-hero .hero-lead { max-width: 60ch; margin-top: 12px; }
+
+.clients-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.client-tile {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 28px 16px;
+  text-align: center;
+  font-family: var(--font-head);
+  font-weight: 600;
+  color: var(--navy-800);
+  background: #fff;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.testimonial-tile {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+.testimonial-tile p.quote { color: var(--ink); font-size: 1.02rem; margin-bottom: 16px; }
+.testimonial-tile .field-hint { margin-top: 4px; }
+
+@media (max-width: 1024px) {
+  .clients-grid { grid-template-columns: repeat(3, 1fr); }
+  .testimonials-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .clients-grid { grid-template-columns: repeat(2, 1fr); }
+}

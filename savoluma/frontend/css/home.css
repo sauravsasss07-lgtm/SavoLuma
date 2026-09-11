@@ -1,0 +1,244 @@
+/* ==========================================================================
+   SavoLuma — home.css (page-specific, extends global.css)
+   ========================================================================== */
+
+.hero {
+  padding: 72px 0 40px;
+  background:
+    radial-gradient(circle at 85% 20%, var(--blue-050) 0%, transparent 55%);
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 48px;
+}
+.hero-lead { font-size: 1.08rem; max-width: 46ch; }
+.hero-actions { display: flex; gap: 14px; margin: 28px 0 40px; }
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+.hero-stats strong { display: block; color: var(--navy-900); font-family: var(--font-head); font-size: 1rem; margin-bottom: 4px; }
+.hero-stats span { font-size: 0.85rem; color: var(--ink-soft); }
+.hero-visual { display: flex; justify-content: center; }
+.hero-svg { width: 100%; max-width: 380px; }
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.service-card h3 { margin-bottom: 12px; }
+.service-card a { font-weight: 600; font-size: 0.9rem; }
+
+.tech-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.tech-category {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+}
+.tech-category h4 { margin-bottom: 12px; font-size: 1rem; }
+.tech-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tech-tags span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--navy-800);
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 5px 12px;
+}
+
+.process-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+.process-step { border-top: 3px solid var(--blue-500); padding-top: 16px; }
+.step-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--navy-900);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.process-step h4 { margin-bottom: 6px; }
+.process-step p { font-size: 0.9rem; margin-bottom: 0; }
+
+.clients-strip {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.client-chip {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 26px;
+  font-family: var(--font-head);
+  font-weight: 600;
+  color: var(--navy-800);
+  background: var(--surface-alt);
+}
+
+.testimonial-card { max-width: 720px; }
+
+/* ---------- Company intro (Understand/Build/Transform/Scale) ---------- */
+.intro-section { padding-top: 56px; padding-bottom: 56px; }
+.intro-grid {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 48px;
+  align-items: start;
+}
+.intro-copy h2 { margin-bottom: 12px; }
+.intro-steps {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+}
+.intro-step { border-top: 3px solid var(--blue-500); padding-top: 14px; }
+.intro-no { display: block; font-family: var(--font-head); font-weight: 700; color: var(--blue-500); font-size: 0.85rem; margin-bottom: 6px; }
+.intro-step h4 { margin-bottom: 6px; }
+.intro-step p { font-size: 0.88rem; margin-bottom: 0; }
+
+/* ---------- Capability strip (below the 3 core service cards) ---------- */
+.capability-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.capability-strip a, .capability-chip {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy-800);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 8px 16px;
+}
+.capability-strip a:hover { border-color: var(--blue-500); color: var(--blue-500); }
+
+/* ---------- AI Innovation Lab (distinct dark panel) ---------- */
+.ai-lab-section { background: var(--navy-900); padding: 80px 0; }
+.ai-lab-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+}
+.ai-lab-copy p { max-width: 52ch; }
+.ai-lab-list { list-style: none; padding: 0; margin: 20px 0 28px; display: flex; flex-direction: column; gap: 10px; }
+.ai-lab-list li {
+  color: #E2E8F0;
+  font-size: 0.92rem;
+  padding-left: 22px;
+  position: relative;
+}
+.ai-lab-list li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 7px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--blue-400);
+}
+.ai-lab-visual { display: flex; justify-content: center; }
+.ai-lab-svg { width: 100%; max-width: 320px; }
+
+/* ---------- Solutions ---------- */
+.solutions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.solution-tile {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+}
+.solution-tile h4 { margin-bottom: 6px; font-size: 1rem; }
+.solution-tile p { font-size: 0.85rem; margin-bottom: 0; }
+
+/* ---------- Industries ---------- */
+.industries-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+.industry-tile {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 14px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--navy-800);
+  background: var(--surface-alt);
+  font-size: 0.9rem;
+}
+
+/* ---------- Workforce Partner ---------- */
+.workforce-partner-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 48px;
+  align-items: center;
+}
+.workforce-partner-copy p { max-width: 62ch; }
+.workforce-partner-stats { display: flex; flex-direction: column; gap: 18px; }
+.wp-stat {
+  border-left: 3px solid var(--blue-500);
+  padding-left: 16px;
+}
+.wp-stat strong { display: block; font-family: var(--font-head); color: var(--navy-900); margin-bottom: 4px; }
+.wp-stat span { font-size: 0.88rem; color: var(--ink-soft); }
+
+.cta-band { background: var(--navy-900); padding: 56px 0; }
+.cta-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1024px) {
+  .services-grid { grid-template-columns: repeat(2, 1fr); }
+  .process-row { grid-template-columns: repeat(3, 1fr); }
+  .tech-category-grid { grid-template-columns: repeat(2, 1fr); }
+  .solutions-grid { grid-template-columns: repeat(2, 1fr); }
+  .industries-grid { grid-template-columns: repeat(3, 1fr); }
+  .intro-grid, .ai-lab-grid, .workforce-partner-grid { grid-template-columns: 1fr; gap: 32px; }
+  .ai-lab-visual { order: -1; max-width: 240px; margin: 0 auto; }
+}
+@media (max-width: 768px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero-visual { order: -1; max-width: 260px; margin: 0 auto; }
+  .hero-stats { grid-template-columns: 1fr; }
+  .services-grid, .process-row { grid-template-columns: 1fr 1fr; }
+  .intro-steps { grid-template-columns: 1fr; }
+  .tech-category-grid { grid-template-columns: 1fr; }
+  .solutions-grid { grid-template-columns: 1fr; }
+  .industries-grid { grid-template-columns: repeat(2, 1fr); }
+  .cta-inner { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 425px) {
+  .services-grid, .process-row { grid-template-columns: 1fr; }
+  .industries-grid { grid-template-columns: 1fr; }
+}

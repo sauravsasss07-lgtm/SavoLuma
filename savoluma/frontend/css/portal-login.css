@@ -1,0 +1,100 @@
+/* SavoLuma — portal-login.css
+   Used by portal/index.html (role picker) and every *-login.html page. */
+
+body.portal-body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-alt);
+}
+.portal-header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+.portal-header .brand img { height: 32px; }
+.portal-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+}
+
+/* Role picker hub */
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  max-width: 900px;
+  width: 100%;
+}
+.role-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  text-align: left;
+  text-decoration: none;
+  display: block;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.role-card:hover { border-color: var(--blue-500); transform: translateY(-2px); }
+.role-card .role-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--blue-050);
+  color: var(--blue-500);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head);
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.role-card h3 { font-size: 1.1rem; margin-bottom: 6px; }
+.role-card p { font-size: 0.88rem; margin: 0; }
+.hub-intro { max-width: 900px; width: 100%; margin-bottom: 28px; }
+
+/* Login card */
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  box-shadow: var(--shadow-2);
+}
+.auth-card .auth-role-tag {
+  display: inline-block;
+  margin-bottom: 14px;
+}
+.auth-card h2 { margin-bottom: 6px; }
+.auth-card .auth-sub { margin-bottom: 24px; font-size: 0.9rem; }
+.auth-error {
+  display: none;
+  background: #FBEBE9;
+  color: var(--danger);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+.auth-demo-hint {
+  margin-top: 20px;
+  padding: 12px 14px;
+  background: var(--blue-050);
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  color: var(--navy-800);
+}
+.auth-links { display: flex; justify-content: space-between; margin-top: 18px; font-size: 0.85rem; }
+
+@media (max-width: 900px) {
+  .role-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .role-grid { grid-template-columns: 1fr; }
+  .auth-card { padding: 26px; }
+}

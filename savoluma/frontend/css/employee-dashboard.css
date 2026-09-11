@@ -1,0 +1,10 @@
+/* SavoLuma — employee-dashboard.css */
+
+.profile-head { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+.profile-head .avatar-circle { width: 68px; height: 68px; font-size: 1.3rem; }
+.profile-fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.profile-fields .pf-item { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.profile-fields .pf-label { font-size: 0.75rem; color: var(--ink-soft); margin-bottom: 4px; }
+.profile-fields .pf-value { font-weight: 600; color: var(--navy-900); }
+
+@media (max-width: 700px) { .profile-fields { grid-template-columns: 1fr; } }

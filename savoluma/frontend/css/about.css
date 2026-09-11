@@ -1,0 +1,53 @@
+/* ========================================================================
+   SavoLuma — about.css
+   ======================================================================== */
+
+.page-hero {
+  padding: 64px 0 48px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.page-hero .hero-lead { max-width: 62ch; font-size: 1.05rem; }
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+.about-grid .card ul { margin: 0; }
+.about-grid .card li { color: var(--ink-soft); margin-bottom: 8px; }
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.values-grid .card h4 { margin-bottom: 8px; }
+.values-grid .card p { font-size: 0.9rem; margin-bottom: 0; }
+
+.leadership-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.leader-card { text-align: center; }
+.leader-photo {
+  width: 84px; height: 84px;
+  border-radius: 50%;
+  background: var(--blue-050);
+  color: var(--blue-500);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head); font-weight: 700; font-size: 1.4rem;
+  margin: 0 auto 12px;
+}
+
+@media (max-width: 1024px) {
+  .values-grid, .leadership-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .about-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 425px) {
+  .values-grid, .leadership-grid { grid-template-columns: 1fr; }
+}

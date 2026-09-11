@@ -1,0 +1,19 @@
+/* SavoLuma — manager-dashboard.css */
+
+.mgr-project-block {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.mgr-project-block .mp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.milestone-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.milestone-pill {
+  font-size: 0.78rem;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+.milestone-pill.done { background: #E8F5EE; color: var(--success); border-color: transparent; }
+.milestone-pill.inprogress { background: var(--blue-050); color: var(--blue-500); border-color: transparent; }
