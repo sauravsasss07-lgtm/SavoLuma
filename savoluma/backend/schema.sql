@@ -1,7 +1,21 @@
 -- ============================================================================
--- SavoLuma Platform — MySQL schema
--- Run once against an empty `savoluma_db` database, then set
--- spring.jpa.hibernate.ddl-auto=validate in application.yml for production.
+-- SavoLuma Platform — MySQL schema (documented foundation)
+--
+-- This file is NOT executed by Spring Boot. Apply it manually to a NEW empty
+-- database. Existing databases must NOT be dropped or truncated.
+--
+-- Phase 0 foundation strategy:
+-- 1. Greenfield: run this file (original tables + additive section below).
+-- 2. Existing local/dev DBs: leave data in place. spring.jpa.hibernate.ddl-auto
+--    defaults to 'update' (override with JPA_DDL_AUTO) so Hibernate only ADDS
+--    missing tables/columns to match JPA entities. Never use create / create-drop.
+-- 3. Production later: apply this file (or equivalent ALTERs), then set
+--    JPA_DDL_AUTO=validate. Do not switch to validate until the live schema
+--    matches the entity model.
+-- 4. Column gaps on tables created by an older run of this file are listed in
+--    comments in the additive section. Hibernate 'update' applies those in
+--    development; do not DROP columns that exist only in SQL (e.g. tasks
+--    estimated_hours) — entities may catch up in later phases.
 -- ============================================================================
 
 CREATE DATABASE IF NOT EXISTS savoluma_db CHARACTER SET utf8mb4;
@@ -23,6 +37,7 @@ CREATE TABLE users (
     status            VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',  -- ACTIVE, BLOCKED
     photo_url         VARCHAR(255),
     two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    last_login_at     TIMESTAMP NULL,
     created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_user_manager FOREIGN KEY (manager_id) REFERENCES users(id)
@@ -258,3 +273,196 @@ CREATE INDEX idx_leads_status   ON leads(status);
 CREATE INDEX idx_tickets_status ON support_tickets(status);
 CREATE INDEX idx_users_role     ON users(role);
 CREATE INDEX idx_users_manager  ON users(manager_id);
+
+-- ============================================================================
+-- Additive foundation — JPA entities that were not in the original dump.
+-- CREATE TABLE IF NOT EXISTS is safe on existing databases (no DROP / TRUNCATE).
+-- Do not re-run the CREATE TABLE statements above against a populated database.
+--
+-- Column gaps on ALREADY CREATED tables (Hibernate ddl-auto=update adds these
+-- in development; apply equivalent ADD COLUMN statements in production before
+-- switching to validate). Do not DROP extra SQL-only columns.
+--   users: last_login_at
+--   clients: website, industry, country, location, description,
+--            services_delivered, status, is_public
+--   job_postings: department, work_mode, experience, skills, salary_range,
+--                 description, responsibilities, requirements, benefits,
+--                 posted_date, closing_date
+--   job_applications: experience, location, portfolio_url, linkedin_url,
+--                     github_url, cover_letter, additional_info
+--                     (original column "message" is retained if present)
+--   leave_requests: leave_type, days_count, reviewed_by
+--   support_tickets: resolution, sla_hours
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS contact_inquiries (
+    id                       BIGINT AUTO_INCREMENT PRIMARY KEY,
+    intent                   VARCHAR(40)  NOT NULL,
+    name                     VARCHAR(120) NOT NULL,
+    email                    VARCHAR(120) NOT NULL,
+    phone                    VARCHAR(20),
+    company                  VARCHAR(150),
+    project_type             VARCHAR(80),
+    timeline                 VARCHAR(60),
+    budget_range             VARCHAR(60),
+    technology_preference    VARCHAR(120),
+    message                  TEXT,
+    status                   VARCHAR(30)  NOT NULL DEFAULT 'NEW',
+    assigned_to              BIGINT,
+    converted_lead_id        BIGINT,
+    created_at               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ci_assignee FOREIGN KEY (assigned_to) REFERENCES users(id),
+    CONSTRAINT fk_ci_lead     FOREIGN KEY (converted_lead_id) REFERENCES leads(id)
+);
+
+CREATE TABLE IF NOT EXISTS opportunities (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    opp_code        VARCHAR(20)  NOT NULL UNIQUE,
+    name            VARCHAR(150) NOT NULL,
+    lead_id         BIGINT,
+    client_id       BIGINT,
+    value           DECIMAL(14,2),
+    stage           VARCHAR(40) DEFAULT 'QUALIFIED',
+    probability     INT,
+    expected_close  DATE,
+    owner_id        BIGINT,
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_opp_lead   FOREIGN KEY (lead_id) REFERENCES leads(id),
+    CONSTRAINT fk_opp_client FOREIGN KEY (client_id) REFERENCES clients(id),
+    CONSTRAINT fk_opp_owner  FOREIGN KEY (owner_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS crm_activities (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    type            VARCHAR(30)  NOT NULL,
+    subject         VARCHAR(200) NOT NULL,
+    notes           TEXT,
+    lead_id         BIGINT,
+    opportunity_id  BIGINT,
+    owner_id        BIGINT,
+    due_at          TIMESTAMP NULL,
+    status          VARCHAR(20) DEFAULT 'OPEN',
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_act_lead FOREIGN KEY (lead_id) REFERENCES leads(id),
+    CONSTRAINT fk_act_opp  FOREIGN KEY (opportunity_id) REFERENCES opportunities(id),
+    CONSTRAINT fk_act_owner FOREIGN KEY (owner_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS ticket_comments (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    ticket_id   BIGINT NOT NULL,
+    author_id   BIGINT,
+    body        TEXT NOT NULL,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_tcom_ticket FOREIGN KEY (ticket_id) REFERENCES support_tickets(id),
+    CONSTRAINT fk_tcom_author FOREIGN KEY (author_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS invoices (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    invoice_number  VARCHAR(30) NOT NULL UNIQUE,
+    client_id       BIGINT,
+    project_id      BIGINT,
+    subtotal        DECIMAL(14,2) NOT NULL,
+    tax             DECIMAL(14,2) DEFAULT 0,
+    cgst            DECIMAL(14,2) DEFAULT 0,
+    sgst            DECIMAL(14,2) DEFAULT 0,
+    igst            DECIMAL(14,2) DEFAULT 0,
+    total           DECIMAL(14,2) NOT NULL,
+    currency        VARCHAR(8) DEFAULT 'INR',
+    due_date        DATE,
+    status          VARCHAR(30) NOT NULL DEFAULT 'DRAFT',
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_inv_client  FOREIGN KEY (client_id) REFERENCES clients(id),
+    CONSTRAINT fk_inv_project FOREIGN KEY (project_id) REFERENCES projects(id)
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    invoice_id  BIGINT,
+    client_id   BIGINT,
+    amount      DECIMAL(14,2) NOT NULL,
+    paid_on     DATE,
+    method      VARCHAR(40),
+    status      VARCHAR(20) NOT NULL DEFAULT 'RECORDED',
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pay_invoice FOREIGN KEY (invoice_id) REFERENCES invoices(id),
+    CONSTRAINT fk_pay_client  FOREIGN KEY (client_id) REFERENCES clients(id)
+);
+
+CREATE TABLE IF NOT EXISTS expenses (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    category      VARCHAR(150) NOT NULL,
+    amount        DECIMAL(14,2) NOT NULL,
+    expense_date  DATE,
+    notes         VARCHAR(255),
+    status        VARCHAR(20) DEFAULT 'RECORDED'
+);
+
+CREATE TABLE IF NOT EXISTS interviews (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    application_id  BIGINT NOT NULL,
+    round           VARCHAR(40),
+    scheduled_at    TIMESTAMP NULL,
+    interviewer_id  BIGINT,
+    feedback        TEXT,
+    decision        VARCHAR(30) DEFAULT 'PENDING',
+    status          VARCHAR(20) DEFAULT 'SCHEDULED',
+    CONSTRAINT fk_int_app         FOREIGN KEY (application_id) REFERENCES job_applications(id),
+    CONSTRAINT fk_int_interviewer FOREIGN KEY (interviewer_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS meetings (
+    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title            VARCHAR(160) NOT NULL,
+    type             VARCHAR(20) DEFAULT 'MEETING',
+    agenda           TEXT,
+    notes            TEXT,
+    starts_at        TIMESTAMP NOT NULL,
+    ends_at          TIMESTAMP NULL,
+    organizer_id     BIGINT,
+    participant_ids  VARCHAR(500),
+    client_id        BIGINT,
+    status           VARCHAR(20) DEFAULT 'SCHEDULED',
+    created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_mtg_organizer FOREIGN KEY (organizer_id) REFERENCES users(id),
+    CONSTRAINT fk_mtg_client    FOREIGN KEY (client_id) REFERENCES clients(id)
+);
+
+CREATE TABLE IF NOT EXISTS company_locations (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    office_name   VARCHAR(120) NOT NULL,
+    city          VARCHAR(80),
+    state         VARCHAR(80),
+    country       VARCHAR(80),
+    address       TEXT,
+    email         VARCHAR(120),
+    phone         VARCHAR(30),
+    map_embed_url VARCHAR(500),
+    is_active     BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS tax_settings (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    code       VARCHAR(40) NOT NULL UNIQUE,
+    rate       DECIMAL(6,3) NOT NULL,
+    currency   VARCHAR(8) DEFAULT 'INR',
+    is_active  BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS site_settings (
+    setting_key   VARCHAR(80) PRIMARY KEY,
+    setting_value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS testimonials (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    client_id    BIGINT,
+    author_name  VARCHAR(120),
+    designation  VARCHAR(120),
+    company      VARCHAR(150),
+    quote        TEXT NOT NULL,
+    image_url    VARCHAR(255),
+    status       VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    CONSTRAINT fk_testimonial_client FOREIGN KEY (client_id) REFERENCES clients(id)
+);

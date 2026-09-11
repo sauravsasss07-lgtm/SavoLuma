@@ -10,9 +10,15 @@ spring:
 
   jpa:
     hibernate:
-      # Use 'validate' once schema.sql (see /backend/schema.sql) has been run manually in production.
-      # 'update' is convenient for local development only.
-      ddl-auto: update
+      # Foundation strategy (Phase 0):
+      # - Default remains 'update' so existing local databases are never dropped
+      #   or rejected; Hibernate only ADDS missing tables/columns to match entities.
+      # - schema.sql is the documented DDL for greenfield installs (plus the
+      #   additive section at the bottom). It is not executed automatically.
+      # - Set JPA_DDL_AUTO=validate in production only AFTER schema.sql (including
+      #   the additive section) has been applied to that database.
+      # - Never set this to 'create' or 'create-drop'.
+      ddl-auto: ${JPA_DDL_AUTO:update}
     show-sql: false
     properties:
       hibernate:

@@ -2,8 +2,10 @@ package com.savoluma.controller;
 
 import com.savoluma.dto.ProjectDTO;
 import com.savoluma.entity.Project;
+import com.savoluma.entity.ProjectMember;
 import com.savoluma.entity.User;
 import com.savoluma.exception.ResourceNotFoundException;
+import com.savoluma.repository.ProjectMemberRepository;
 import com.savoluma.repository.ProjectRepository;
 import com.savoluma.repository.UserRepository;
 import com.savoluma.security.SavoUserPrincipal;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 public class ProjectController {
 
     private final ProjectRepository projectRepository;
+    private final ProjectMemberRepository projectMemberRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
 
@@ -54,7 +57,10 @@ public class ProjectController {
             projects = projectRepository.findByManagerId(user.getId());
         } else {
             projects = projectMemberRepository.findByUserId(user.getId())
-                    .stream().map(com.savoluma.entity.ProjectMember::getProject).toList();
+                    .stream()
+                    .map(ProjectMember::getProject)
+                    .filter(p -> p != null)
+                    .toList();
         }
         return ResponseEntity.ok(projects.stream().map(ProjectDTO::fromEntity).collect(Collectors.toList()));
     }
