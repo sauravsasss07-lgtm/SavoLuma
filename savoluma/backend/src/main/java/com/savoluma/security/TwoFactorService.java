@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,8 +35,9 @@ public class TwoFactorService {
     private record PendingChallenge(String username, String code, long expiresAtMillis) {}
 
     public boolean isRequiredForRole(String role) {
-        List<String> required = List.of(requiredRolesCsv.split(","));
-        return required.contains(role);
+        return java.util.Arrays.stream(requiredRolesCsv.split(","))
+                .map(String::trim)
+                .anyMatch(required -> required.equals(role));
     }
 
     public Challenge createChallenge(String username) {

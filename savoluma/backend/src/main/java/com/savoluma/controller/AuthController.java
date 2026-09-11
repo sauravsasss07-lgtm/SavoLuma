@@ -11,6 +11,7 @@ import com.savoluma.security.SavoUserPrincipal;
 import com.savoluma.security.TwoFactorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,6 +29,9 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final TwoFactorService twoFactorService;
     private final UserRepository userRepository;
+
+    @Value("${app.security.two-factor-dev-return-code:false}")
+    private boolean echoDevelopmentOtp;
 
     /**
      * Step 1 of login. Verifies credentials via Spring Security (which
@@ -52,11 +56,10 @@ public class AuthController {
 
         if (twoFactorService.isRequiredForRole(user.getRole().name()) || user.isTwoFactorEnabled()) {
             var challenge = twoFactorService.createChallenge(user.getUsername());
-            boolean echo = Boolean.parseBoolean(System.getenv().getOrDefault("TWO_FACTOR_DEV_RETURN", "false"));
             return ResponseEntity.ok(LoginResponse.builder()
                     .twoFactorRequired(true)
                     .challengeId(challenge.id())
-                    .developmentOtpHint(echo ? challenge.code() : null)
+                    .developmentOtpHint(echoDevelopmentOtp ? challenge.code() : null)
                     .build());
         }
 

@@ -1,12 +1,10 @@
 /* ==========================================================================
    SavoLuma — dashboard-common.js
    Shared by every *-dashboard.html: sidebar panel switching, logout,
-   and the initials-avatar helper. Each role's own *-dashboard.js handles
-   its specific data rendering and CRUD.
+   toasts, and the initials-avatar helper.
    ========================================================================== */
 
 function initDashboardShell(session) {
-  // Sidebar nav → panel switching
   document.querySelectorAll('.dash-nav button[data-panel]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.dash-nav button').forEach(b => b.classList.remove('active'));
@@ -19,7 +17,6 @@ function initDashboardShell(session) {
     });
   });
 
-  // User identity in sidebar footer
   const nameEl = document.getElementById('sidebarUserName');
   const roleEl = document.getElementById('sidebarUserRole');
   const avatarEl = document.getElementById('sidebarAvatar');
@@ -27,15 +24,13 @@ function initDashboardShell(session) {
   if (roleEl) roleEl.textContent = session.role;
   if (avatarEl) avatarEl.textContent = initials(session.name);
 
-  // Logout
   document.querySelectorAll('[data-logout]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      SavoAuth.logout();
+    btn.addEventListener('click', async () => {
+      await SavoAuth.logout();
       window.location.href = btn.getAttribute('data-logout') || 'index.html';
     });
   });
 
-  // Generic modal open/close wiring: elements with data-modal-open / data-modal-close
   document.querySelectorAll('[data-modal-open]').forEach(btn => {
     btn.addEventListener('click', () => {
       const modal = document.getElementById(btn.getAttribute('data-modal-open'));
@@ -65,4 +60,22 @@ function statusBadge(status) {
     PRESENT: 'badge-green', ABSENT: 'badge-red', HALF_DAY: 'badge-amber'
   };
   return map[status] || 'badge-grey';
+}
+
+function showToast(message, type = '') {
+  let stack = document.querySelector('.toast-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.className = 'toast-stack';
+    document.body.appendChild(stack);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type ? ' ' + type : '');
+  toast.textContent = message;
+  stack.appendChild(toast);
+  setTimeout(() => toast.remove(), 3200);
+}
+
+function showApiError(err, fallback) {
+  showToast((err && err.message) || fallback || 'Request failed.', 'error');
 }

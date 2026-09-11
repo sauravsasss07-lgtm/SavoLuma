@@ -1,33 +1,43 @@
 /* ==========================================================================
    SavoLuma — manager-dashboard.js
-   Manager sees and manages only their own team's projects/tasks/attendance
-   (spec section 21). Task assignment is the core interactive feature here.
+   Team, projects, and tasks load from the REST API. Attendance has no
+   backend controller yet and stays on the local demo store.
    ========================================================================== */
 
 let CURRENT_MANAGER_ID = null;
+let mgrProjectsCache = [];
+let mgrTeamCache = [];
+let mgrTasksCache = [];
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const session = SavoAuth.guard('MANAGER', 'manager-login.html');
   if (!session) return;
   initDashboardShell(session);
   CURRENT_MANAGER_ID = session.employeeId;
-
-  renderWorkspace();
-  renderTeam();
-  renderProjectsDetail();
-  renderKanban();
-  renderAttendance();
   wireAssignTask();
+  await refreshManagerData();
 });
 
-function mgrDb() { return SavoDB.load(); }
-function myProjects() { return SavoAPI.getProjectsByManager(CURRENT_MANAGER_ID); }
-function myTeam() { return mgrDb().users.filter(u => u.manager === CURRENT_MANAGER_ID); }
+async function refreshManagerData() {
+  try {
+    mgrProjectsCache = await SavoAPI.getMyProjects();
+    mgrTeamCache = await SavoAPI.getDirectReports(CURRENT_MANAGER_ID);
+    mgrTasksCache = await SavoAPI.getTasksByManager();
+    renderWorkspace();
+    renderTeam();
+    renderProjectsDetail();
+    renderKanban();
+    renderAttendance();
+    fillAssignSelects();
+  } catch (err) {
+    showApiError(err, 'Could not load manager workspace.');
+  }
+}
 
 function renderWorkspace() {
-  const projects = myProjects();
-  const team = myTeam();
-  const tasks = SavoAPI.getTasksByManager(CURRENT_MANAGER_ID);
+  const projects = mgrProjectsCache;
+  const team = mgrTeamCache;
+  const tasks = mgrTasksCache;
   document.getElementById('mgrStatRow').innerHTML = [
     { label: 'My Projects', value: projects.length },
     { label: 'Team Members', value: team.length },
@@ -36,68 +46,62 @@ function renderWorkspace() {
   ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div></div>`).join('');
 
   document.getElementById('mgrProjectsOverviewTable').innerHTML = `
-    <tr><th>Project</th><th>Client</th><th>Status</th><th>Progress</th></tr>
+    <tr><th>Project</th><th>Code</th><th>Status</th><th>Progress</th></tr>
     ${projects.map(p => `
-      <tr><td>${p.name}</td><td>${p.client}</td><td><span class="badge ${statusBadge(p.status)}">${p.status}</span></td>
+      <tr><td>${p.name}</td><td>${p.projectCode || '—'}</td><td><span class="badge ${statusBadge(p.status)}">${p.status}</span></td>
       <td><div class="progress-track" style="width:120px;"><div class="progress-fill" style="width:${p.progress}%;"></div></div></td></tr>
     `).join('') || `<tr><td class="empty-state" colspan="4">No projects assigned to you yet.</td></tr>`}
   `;
 }
 
 function renderTeam() {
-  const team = myTeam();
+  const team = mgrTeamCache;
   document.getElementById('mgrTeamTable').innerHTML = `
     <tr><th>ID</th><th>Name</th><th>Title</th><th>Team</th><th>Status</th></tr>
-    ${team.map(u => `<tr><td>${u.employeeId}</td><td>${u.name}</td><td>${u.title || u.role}</td><td>${u.team}</td><td><span class="badge ${statusBadge(u.status)}">${u.status}</span></td></tr>`).join('') || `<tr><td class="empty-state" colspan="5">No team members assigned yet.</td></tr>`}
+    ${team.map(u => `<tr><td>${u.employeeId}</td><td>${u.name}</td><td>${u.title || u.role}</td><td>${u.team || '—'}</td><td><span class="badge ${statusBadge(u.status)}">${u.status}</span></td></tr>`).join('') || `<tr><td class="empty-state" colspan="5">No team members assigned yet.</td></tr>`}
   `;
 }
 
 function renderProjectsDetail() {
-  const projects = myProjects();
-  document.getElementById('mgrProjectsDetail').innerHTML = projects.map(p => `
+  document.getElementById('mgrProjectsDetail').innerHTML = mgrProjectsCache.map(p => `
     <div class="mgr-project-block">
       <div class="mp-head"><h4 style="margin:0;">${p.name}</h4><span class="badge ${statusBadge(p.status)}">${p.status}</span></div>
-      <p style="margin:0;">${p.client} · ${p.startDate} → ${p.endDate}</p>
+      <p style="margin:0;">${p.projectCode || ''} · ${p.startDate || '—'} → ${p.endDate || '—'}</p>
       <div class="progress-track" style="margin-top:10px;"><div class="progress-fill" style="width:${p.progress}%;"></div></div>
-      <div class="milestone-row">
-        ${(p.milestones || []).map(m => `<span class="milestone-pill ${m.done ? 'done' : (m.inProgress ? 'inprogress' : '')}">${m.name}${m.done ? ' ✓' : (m.inProgress ? ' (in progress)' : '')}</span>`).join('')}
-      </div>
     </div>
   `).join('') || '<p class="field-hint">No projects assigned to you yet.</p>';
 }
 
 function renderKanban() {
-  const tasks = SavoAPI.getTasksByManager(CURRENT_MANAGER_ID);
-  const d = mgrDb();
+  const tasks = mgrTasksCache;
   const statuses = ['TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'];
   document.getElementById('kanbanRow').innerHTML = statuses.map(s => `
     <div class="kanban-col">
       <h4>${s.replace('_',' ')} <span class="badge badge-grey">${tasks.filter(t => t.status === s).length}</span></h4>
-      ${tasks.filter(t => t.status === s).map(t => {
-        const emp = d.users.find(u => u.employeeId === t.assignedTo);
-        return `
+      ${tasks.filter(t => t.status === s).map(t => `
           <div class="kanban-card">
             <strong>${t.title}</strong>
-            <div class="k-meta"><span>${emp ? emp.name : t.assignedTo}</span><span class="badge ${statusBadge(t.priority)}">${t.priority}</span></div>
+            <div class="k-meta"><span>${t.assignedToName || t.assignedTo || '—'}</span><span class="badge ${statusBadge(t.priority)}">${t.priority}</span></div>
             <select style="width:100%;margin-top:8px;" onchange="mgrUpdateTaskStatus('${t.id}', this.value)">
               ${statuses.map(st => `<option ${st===t.status?'selected':''}>${st}</option>`).join('')}
               <option ${t.status==='BLOCKED'?'selected':''}>BLOCKED</option>
             </select>
           </div>
-        `;
-      }).join('')}
+        `).join('')}
     </div>
   `).join('');
 }
-function mgrUpdateTaskStatus(id, status) {
-  SavoAPI.updateTaskStatus(id, status, CURRENT_MANAGER_ID);
-  renderKanban();
-  renderWorkspace();
-  showToast('Task status updated.', 'success');
+
+async function mgrUpdateTaskStatus(id, status) {
+  try {
+    await SavoAPI.updateTaskStatus(id, status);
+    showToast('Task status updated.', 'success');
+    await refreshManagerData();
+  } catch (err) { showApiError(err); }
 }
 
 function renderAttendance() {
-  const team = myTeam();
+  const team = mgrTeamCache;
   const records = SavoAPI.getAttendanceForTeam(team.map(t => t.employeeId));
   document.getElementById('mgrAttendanceTable').innerHTML = `
     <tr><th>Employee</th><th>Date</th><th>Minutes Worked</th><th>Status</th></tr>
@@ -108,26 +112,29 @@ function renderAttendance() {
   `;
 }
 
-function wireAssignTask() {
+function fillAssignSelects() {
   const projSelect = document.getElementById('atProject');
   const empSelect = document.getElementById('atEmployee');
-  projSelect.innerHTML = myProjects().map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-  empSelect.innerHTML = myTeam().map(u => `<option value="${u.employeeId}">${u.name}</option>`).join('');
+  if (!projSelect || !empSelect) return;
+  projSelect.innerHTML = mgrProjectsCache.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  empSelect.innerHTML = mgrTeamCache.map(u => `<option value="${u.employeeId}">${u.name}</option>`).join('');
+}
 
-  document.getElementById('assignTaskForm').addEventListener('submit', e => {
+function wireAssignTask() {
+  document.getElementById('assignTaskForm').addEventListener('submit', async e => {
     e.preventDefault();
-    SavoAPI.createTask({
-      projectId: projSelect.value,
-      title: document.getElementById('atTitle').value.trim(),
-      assignedTo: empSelect.value,
-      assignedBy: CURRENT_MANAGER_ID,
-      priority: document.getElementById('atPriority').value,
-      dueDate: document.getElementById('atDue').value
-    });
-    document.getElementById('assignTaskModal').classList.remove('open');
-    renderKanban();
-    renderWorkspace();
-    showToast('Task assigned.', 'success');
-    e.target.reset();
+    try {
+      await SavoAPI.createTask({
+        projectId: document.getElementById('atProject').value,
+        title: document.getElementById('atTitle').value.trim(),
+        assignedTo: document.getElementById('atEmployee').value,
+        priority: document.getElementById('atPriority').value,
+        dueDate: document.getElementById('atDue').value
+      });
+      document.getElementById('assignTaskModal').classList.remove('open');
+      e.target.reset();
+      showToast('Task assigned.', 'success');
+      await refreshManagerData();
+    } catch (err) { showApiError(err, 'Could not assign task.'); }
   });
 }

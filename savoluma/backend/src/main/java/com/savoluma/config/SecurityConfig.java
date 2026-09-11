@@ -24,6 +24,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -68,7 +69,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        config.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
@@ -100,6 +104,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/roles/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
 
                 // ---------- ADMIN / CEO (business operations) ----------
+                .requestMatchers(HttpMethod.GET, "/api/v1/users/*/direct-reports").authenticated()
                 .requestMatchers("/api/v1/users/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "HR", "CEO")
                 .requestMatchers("/api/v1/reports/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "CEO")
                 .requestMatchers("/api/v1/audit-logs/**").hasAnyRole("SUPER_ADMIN", "ADMIN")

@@ -1,23 +1,20 @@
 /* ==========================================================================
    SavoLuma — admin-dashboard.js
-   Admin has the broadest business-operations access (see spec section 26):
-   users, clients, employees, leads, CRM, projects, support, services,
-   portfolio, careers, blog, reports, notifications — but NOT unrestricted
-   system-level security (that is SUPER_ADMIN territory, represented here
-   by the System Settings panel being visible but 2FA/session policy only).
+   Employees and projects load from the REST API. CRM/support/careers that
+   have no controller yet still use the local demo store.
    ========================================================================== */
 
 const ALL_PERMISSIONS = ['USER_VIEW','USER_CREATE','USER_UPDATE','USER_DELETE','PROJECT_VIEW','PROJECT_CREATE','PROJECT_UPDATE','TASK_VIEW','TASK_ASSIGN','LEAD_VIEW','LEAD_UPDATE','TICKET_VIEW','TICKET_UPDATE','FINANCE_VIEW','REPORT_VIEW','TEAM_VIEW','EMPLOYEE_VIEW','EMPLOYEE_CREATE','JOB_MANAGE','SELF_VIEW'];
 
-document.addEventListener('DOMContentLoaded', () => {
+let apiEmployees = [];
+let apiProjects = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
   const session = SavoAuth.guard('ADMIN', 'admin-login.html');
   if (!session) return;
   initDashboardShell(session);
 
-  renderOverview();
-  renderEmployees();
   renderRoles();
-  renderProjects();
   renderLeads();
   renderTickets();
   renderClients();
@@ -26,67 +23,95 @@ document.addEventListener('DOMContentLoaded', () => {
   renderApplications();
   renderAudit();
   wireModals();
+  await refreshApiPanels();
 });
 
 function db() { return SavoDB.load(); }
 
-/* ---------------- Overview ---------------- */
+async function refreshApiPanels() {
+  try {
+    apiEmployees = await SavoAPI.getEmployees();
+    apiProjects = await SavoAPI.getProjects();
+    renderOverview();
+    renderEmployees();
+    renderProjects();
+  } catch (err) {
+    showApiError(err, 'Could not load employees or projects.');
+    document.getElementById('statRow').innerHTML = '<p class="field-hint">Unable to load live metrics.</p>';
+  }
+}
+
 function renderOverview() {
   const d = db();
   const stats = [
-    { label: 'Total Employees', value: d.users.length, sub: `${d.users.filter(u=>u.status==='ACTIVE').length} active` },
-    { label: 'Active Projects', value: d.projects.filter(p=>p.status!=='COMPLETED').length, sub: `${d.projects.length} total` },
-    { label: 'Open Leads', value: d.leads.filter(l=>!['WON','LOST'].includes(l.status)).length, sub: `${d.leads.length} total leads` },
-    { label: 'Open Tickets', value: d.tickets.filter(t=>t.status!=='RESOLVED' && t.status!=='CLOSED').length, sub: `${d.tickets.length} total tickets` }
+    { label: 'Total Employees', value: apiEmployees.length, sub: `${apiEmployees.filter(u => u.status === 'ACTIVE').length} active` },
+    { label: 'Active Projects', value: apiProjects.filter(p => p.status !== 'COMPLETED').length, sub: `${apiProjects.length} total` },
+    { label: 'Open Leads', value: d.leads.filter(l => !['WON', 'LOST'].includes(l.status)).length, sub: `${d.leads.length} total leads` },
+    { label: 'Open Tickets', value: d.tickets.filter(t => t.status !== 'RESOLVED' && t.status !== 'CLOSED').length, sub: `${d.tickets.length} total tickets` }
   ];
   document.getElementById('statRow').innerHTML = stats.map(s => `
     <div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div><div class="stat-sub">${s.sub}</div></div>
   `).join('');
 
   document.getElementById('overviewProjectsTable').innerHTML = `
-    <tr><th>Project</th><th>Client</th><th>Manager</th><th>Status</th><th>Progress</th></tr>
-    ${d.projects.map(p => `
-      <tr><td>${p.name}</td><td>${p.client}</td><td>${employeeName(p.manager)}</td>
+    <tr><th>Project</th><th>Code</th><th>Manager</th><th>Status</th><th>Progress</th></tr>
+    ${apiProjects.map(p => `
+      <tr><td>${p.name}</td><td>${p.projectCode || '—'}</td><td>${p.managerName || employeeName(p.manager)}</td>
       <td><span class="badge ${statusBadge(p.status)}">${p.status}</span></td>
       <td><div class="progress-track" style="width:120px;"><div class="progress-fill" style="width:${p.progress}%;"></div></div></td></tr>
-    `).join('')}
+    `).join('') || '<tr><td class="empty-state" colspan="5">No projects yet.</td></tr>'}
   `;
 }
 
-function employeeName(id) { const u = db().users.find(u => u.employeeId === id); return u ? u.name : '—'; }
+function employeeName(id) {
+  const u = apiEmployees.find(emp => emp.employeeId === id);
+  return u ? u.name : '—';
+}
 
-/* ---------------- Employees ---------------- */
 function renderEmployees() {
-  const d = db();
   document.getElementById('employeesTable').innerHTML = `
     <tr><th>ID</th><th>Name</th><th>Role</th><th>Department / Team</th><th>Status</th><th>Actions</th></tr>
-    ${d.users.map(u => `
+    ${apiEmployees.map(u => `
       <tr>
         <td>${u.employeeId}</td>
         <td>${u.name}</td>
         <td><span class="badge badge-blue">${u.role}</span></td>
-        <td>${u.department}${u.team ? ' / ' + u.team : ''}</td>
+        <td>${u.department || ''}${u.team ? ' / ' + u.team : ''}</td>
         <td><span class="badge ${statusBadge(u.status)}">${u.status}</span></td>
         <td class="table-actions">
           ${u.status === 'ACTIVE'
             ? `<button class="btn btn-outline btn-sm" onclick="blockEmp('${u.employeeId}')">Block</button>`
             : `<button class="btn btn-outline btn-sm" onclick="unblockEmp('${u.employeeId}')">Unblock</button>`}
-          <button class="btn btn-danger btn-sm" onclick="removeEmp('${u.employeeId}','${u.name.replace(/'/g,"")}')">Remove</button>
+          <button class="btn btn-danger btn-sm" onclick="removeEmp('${u.employeeId}')">Remove</button>
         </td>
       </tr>
-    `).join('')}
+    `).join('') || '<tr><td class="empty-state" colspan="6">No employees returned from the API.</td></tr>'}
   `;
 }
-function blockEmp(id) { SavoAPI.blockEmployee(id); renderEmployees(); renderOverview(); showToast('Employee access blocked.', 'success'); }
-function unblockEmp(id) { SavoAPI.unblockEmployee(id); renderEmployees(); renderOverview(); showToast('Employee access restored.', 'success'); }
-function removeEmp(id, name) {
-  if (!confirm(`Remove ${name} (${id}) from the system? This cannot be undone here.`)) return;
-  SavoAPI.removeEmployee(id);
-  renderEmployees(); renderOverview();
-  showToast('Employee removed.', 'success');
+
+async function blockEmp(id) {
+  try {
+    await SavoAPI.blockEmployee(id);
+    showToast('Employee access blocked.', 'success');
+    await refreshApiPanels();
+  } catch (err) { showApiError(err); }
+}
+async function unblockEmp(id) {
+  try {
+    await SavoAPI.unblockEmployee(id);
+    showToast('Employee access restored.', 'success');
+    await refreshApiPanels();
+  } catch (err) { showApiError(err); }
+}
+async function removeEmp(id) {
+  if (!confirm('Remove ' + id + ' from the system? This cannot be undone here.')) return;
+  try {
+    await SavoAPI.removeEmployee(id);
+    showToast('Employee removed.', 'success');
+    await refreshApiPanels();
+  } catch (err) { showApiError(err); }
 }
 
-/* ---------------- Roles & Permissions ---------------- */
 function renderRoles() {
   const d = db();
   document.getElementById('rolesList').innerHTML = d.roles.map(r => `
@@ -103,31 +128,32 @@ function renderRoles() {
 function togglePerm(roleId, perm) {
   const d = db();
   const role = d.roles.find(r => r.id === roleId);
-  if (!role || role.permissions.includes('*')) return; // CEO stays unrestricted
+  if (!role || role.permissions.includes('*')) return;
   const has = role.permissions.includes(perm);
   const updated = has ? role.permissions.filter(p => p !== perm) : [...role.permissions, perm];
   SavoAPI.updateRolePermissions(roleId, updated);
   renderRoles();
   renderAudit();
-  showToast(`Updated permissions for ${roleId}.`, 'success');
+  showToast('Updated permissions for ' + roleId + '.', 'success');
 }
 
-/* ---------------- Projects ---------------- */
 function renderProjects() {
-  const d = db();
   document.getElementById('projectsTable').innerHTML = `
-    <tr><th>ID</th><th>Name</th><th>Client</th><th>Manager</th><th>Status</th><th>Progress</th></tr>
-    ${d.projects.map(p => `
-      <tr><td>${p.id}</td><td>${p.name}</td><td>${p.client}</td><td>${employeeName(p.manager)}</td>
+    <tr><th>Code</th><th>Name</th><th>Manager</th><th>Status</th><th>Progress</th></tr>
+    ${apiProjects.map(p => `
+      <tr><td>${p.projectCode || p.id}</td><td>${p.name}</td><td>${p.managerName || employeeName(p.manager)}</td>
       <td><span class="badge ${statusBadge(p.status)}">${p.status}</span></td>
       <td><div class="progress-track" style="width:120px;"><div class="progress-fill" style="width:${p.progress}%;"></div></div></td></tr>
-    `).join('')}
+    `).join('') || '<tr><td class="empty-state" colspan="5">No projects yet.</td></tr>'}
   `;
   const mgrSelect = document.getElementById('npManager');
-  if (mgrSelect) mgrSelect.innerHTML = d.users.filter(u => u.role === 'MANAGER').map(m => `<option value="${m.employeeId}">${m.name}</option>`).join('');
+  if (mgrSelect) {
+    mgrSelect.innerHTML = apiEmployees.filter(u => u.role === 'MANAGER').map(m =>
+      `<option value="${m.employeeId}">${m.name}</option>`).join('')
+      || '<option value="">No managers in directory</option>';
+  }
 }
 
-/* ---------------- CRM / Leads ---------------- */
 function renderLeads() {
   const d = db();
   document.getElementById('leadsTable').innerHTML = `
@@ -145,7 +171,6 @@ function renderLeads() {
 }
 function updateLead(id, status) { SavoAPI.updateLeadStatus(id, status); renderOverview(); showToast('Lead status updated.', 'success'); }
 
-/* ---------------- Support ---------------- */
 function renderTickets() {
   const d = db();
   document.getElementById('ticketsTable').innerHTML = `
@@ -163,7 +188,6 @@ function renderTickets() {
 }
 function updateTicket(id, status) { SavoAPI.updateTicketStatus(id, status); renderOverview(); showToast('Ticket updated.', 'success'); }
 
-/* ---------------- Clients / Testimonials ---------------- */
 function renderClients() {
   const d = db();
   document.getElementById('clientsTable').innerHTML = `
@@ -187,7 +211,6 @@ function removeTestimonial(i) {
   renderTestimonials(); showToast('Testimonial removed.', 'success');
 }
 
-/* ---------------- Careers ---------------- */
 function renderJobs() {
   const d = db();
   document.getElementById('jobsTable').innerHTML = `
@@ -207,7 +230,6 @@ function renderApplications() {
   ` : `<tr><td class="empty-state">No applications received yet.</td></tr>`;
 }
 
-/* ---------------- Audit ---------------- */
 function renderAudit() {
   const d = db();
   document.getElementById('auditTable').innerHTML = `
@@ -216,25 +238,31 @@ function renderAudit() {
   `;
 }
 
-/* ---------------- Modal forms ---------------- */
 function wireModals() {
-  document.getElementById('addEmployeeForm').addEventListener('submit', e => {
+  document.getElementById('addEmployeeForm').addEventListener('submit', async e => {
     e.preventDefault();
-    SavoAPI.createEmployee({
-      name: val('neName'), email: val('neEmail'), role: val('neRole'), department: val('neDept'),
-      team: val('neTeam') || 'Unassigned', username: val('neUsername'), password: 'Welcome@123', phone: '', manager: null, photo: null
-    });
-    closeModals(); renderEmployees(); renderOverview(); renderAudit();
-    showToast('Employee created.', 'success');
-    e.target.reset();
+    try {
+      await SavoAPI.createEmployee({
+        name: val('neName'), email: val('neEmail'), role: val('neRole'), department: val('neDept'),
+        team: val('neTeam') || 'Unassigned', username: val('neUsername'),
+        temporaryPassword: val('nePassword'), phone: '', manager: null
+      });
+      closeModals();
+      e.target.reset();
+      showToast('Employee created.', 'success');
+      await refreshApiPanels();
+    } catch (err) { showApiError(err, 'Could not create employee.'); }
   });
 
-  document.getElementById('addProjectForm').addEventListener('submit', e => {
+  document.getElementById('addProjectForm').addEventListener('submit', async e => {
     e.preventDefault();
-    SavoAPI.createProject({ name: val('npName'), client: val('npClient'), manager: val('npManager'), team: [], stack: [], startDate: new Date().toISOString().slice(0,10), endDate: '', milestones: [] });
-    closeModals(); renderProjects(); renderOverview(); renderAudit();
-    showToast('Project created.', 'success');
-    e.target.reset();
+    try {
+      await SavoAPI.createProject({ name: val('npName'), manager: val('npManager') });
+      closeModals();
+      e.target.reset();
+      showToast('Project created.', 'success');
+      await refreshApiPanels();
+    } catch (err) { showApiError(err, 'Could not create project.'); }
   });
 
   document.getElementById('addLeadForm').addEventListener('submit', e => {

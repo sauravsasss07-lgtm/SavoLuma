@@ -1,6 +1,7 @@
 package com.savoluma.controller;
 
 import com.savoluma.dto.CreateUserRequest;
+import com.savoluma.dto.UpdateUserRequest;
 import com.savoluma.dto.UserDTO;
 import com.savoluma.security.SavoUserPrincipal;
 import com.savoluma.service.UserService;
@@ -39,7 +40,15 @@ public class UserController {
     }
 
     @GetMapping("/{employeeId}/direct-reports")
-    public ResponseEntity<List<UserDTO>> getDirectReports(@PathVariable String employeeId) {
+    public ResponseEntity<List<UserDTO>> getDirectReports(@PathVariable String employeeId,
+                                                           @AuthenticationPrincipal SavoUserPrincipal principal) {
+        String actorRole = principal.getUser().getRole().name();
+        boolean privileged = actorRole.matches("SUPER_ADMIN|ADMIN|HR|CEO");
+        boolean self = principal.getUser().getEmployeeId().equals(employeeId);
+        if (!privileged && !self) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You can only view your own direct reports.");
+        }
         return ResponseEntity.ok(userService.getDirectReports(employeeId));
     }
 
@@ -54,7 +63,7 @@ public class UserController {
     @PutMapping("/{employeeId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','HR')")
     public ResponseEntity<UserDTO> update(@PathVariable String employeeId,
-                                           @RequestBody CreateUserRequest changes,
+                                           @RequestBody UpdateUserRequest changes,
                                            @AuthenticationPrincipal SavoUserPrincipal principal) {
         return ResponseEntity.ok(userService.update(employeeId, changes, principal.getUser()));
     }

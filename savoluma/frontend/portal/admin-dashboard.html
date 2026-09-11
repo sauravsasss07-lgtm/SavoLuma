@@ -14,7 +14,7 @@
     try {
       var raw = localStorage.getItem('savoluma_session_v1');
       var session = raw ? JSON.parse(raw) : null;
-      if (!session || session.role !== 'ADMIN') {
+      if (!session || !session.token || session.role !== 'ADMIN') {
         window.location.replace('admin-login.html');
       }
     } catch (e) {
@@ -211,6 +211,7 @@
         <div class="field"><label>Team</label><input id="neTeam" placeholder="e.g. Alpha Squad"></div>
         <div class="field"><label>Username</label><input id="neUsername" required></div>
       </div>
+      <div class="field"><label>Temporary password</label><input id="nePassword" type="password" required autocomplete="new-password"></div>
       <button type="submit" class="btn btn-primary btn-block">Create Employee</button>
     </form>
   </div>

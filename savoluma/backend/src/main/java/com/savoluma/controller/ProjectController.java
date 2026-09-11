@@ -107,7 +107,9 @@ public class ProjectController {
         }
 
         if (changes.containsKey("status")) p.setStatus((String) changes.get("status"));
-        if (changes.containsKey("progress")) p.setProgress((Integer) changes.get("progress"));
+        if (changes.containsKey("progress") && changes.get("progress") instanceof Number) {
+            p.setProgress(((Number) changes.get("progress")).intValue());
+        }
         projectRepository.save(p);
         auditService.log(actor, "Updated project " + p.getProjectCode(), "PROJECT", p.getProjectCode());
         return ResponseEntity.ok(ProjectDTO.fromEntity(p));

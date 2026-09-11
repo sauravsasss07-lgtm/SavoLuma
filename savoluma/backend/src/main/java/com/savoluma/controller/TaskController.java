@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -68,16 +69,19 @@ public class TaskController {
             throw new AccessDeniedException("You can only assign tasks within projects you manage.");
         }
 
-        Task task = Task.builder()
+        Task.TaskBuilder taskBuilder = Task.builder()
                 .taskCode("TSK-" + (taskRepository.count() + 1001))
                 .project(project)
                 .title(body.get("title"))
                 .assignedTo(assignee)
                 .assignedBy(actor)
                 .priority(body.getOrDefault("priority", "MEDIUM"))
-                .status("TODO")
-                .build();
-        task = taskRepository.save(task);
+                .status("TODO");
+        String due = body.get("dueDate");
+        if (due != null && !due.isBlank()) {
+            taskBuilder.dueDate(LocalDate.parse(due));
+        }
+        Task task = taskRepository.save(taskBuilder.build());
         auditService.log(actor, "Assigned task " + task.getTaskCode() + " to " + assignee.getEmployeeId(), "TASK", task.getTaskCode());
         return ResponseEntity.ok(TaskDTO.fromEntity(task));
     }

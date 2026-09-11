@@ -1,6 +1,7 @@
 package com.savoluma.service.impl;
 
 import com.savoluma.dto.CreateUserRequest;
+import com.savoluma.dto.UpdateUserRequest;
 import com.savoluma.dto.UserDTO;
 import com.savoluma.entity.Role;
 import com.savoluma.entity.User;
@@ -80,7 +81,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDTO update(String employeeId, CreateUserRequest changes, User actor) {
+    public UserDTO update(String employeeId, UpdateUserRequest changes, User actor) {
         User user = findOrThrow(employeeId);
 
         if (changes.getFullName() != null) user.setFullName(changes.getFullName());
@@ -88,6 +89,15 @@ public class UserServiceImpl implements UserService {
         if (changes.getPhone() != null) user.setPhone(changes.getPhone());
         if (changes.getDepartment() != null) user.setDepartment(changes.getDepartment());
         if (changes.getTeam() != null) user.setTeam(changes.getTeam());
+        if (changes.getTitle() != null) user.setTitle(changes.getTitle());
+        if (changes.getManagerId() != null) {
+            if (changes.getManagerId().isBlank()) {
+                user.setManager(null);
+            } else {
+                user.setManager(userRepository.findByEmployeeId(changes.getManagerId())
+                        .orElseThrow(() -> new BadRequestException("Manager not found: " + changes.getManagerId())));
+            }
+        }
 
         userRepository.save(user);
         auditService.log(actor, "Updated employee " + employeeId, "USER", employeeId);

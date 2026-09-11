@@ -12,7 +12,7 @@
     try {
       var raw = localStorage.getItem('savoluma_session_v1');
       var session = raw ? JSON.parse(raw) : null;
-      if (!session || (session.role !== 'ADMIN' && session.role !== 'HR')) {
+      if (!session || !session.token || (session.role !== 'ADMIN' && session.role !== 'HR' && session.role !== 'SUPER_ADMIN')) {
         window.location.replace('index.html');
       }
     } catch (e) {
@@ -65,14 +65,13 @@
       </div>
       <div class="field"><label for="regManager">Reporting manager</label><select id="regManager"></select></div>
       <div class="field"><label for="regUsername">Login username</label><input id="regUsername" required></div>
-      <div class="field"><label for="regPassword">Temporary password</label><input id="regPassword" type="text" required value="Welcome@123"></div>
+      <div class="field"><label for="regPassword">Temporary password</label><input id="regPassword" type="password" required autocomplete="new-password"></div>
       <button type="submit" class="btn btn-primary btn-block">Create Employee</button>
     </form>
     <div class="auth-links"><a href="admin-login.html">Go to Admin login</a><a href="hr-login.html">Go to HR login</a></div>
   </div>
 </main>
 
-<script src="../js/data.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/api.js"></script>
 <script src="../js/register.js"></script>

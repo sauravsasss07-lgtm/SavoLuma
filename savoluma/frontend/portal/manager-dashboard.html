@@ -14,7 +14,7 @@
     try {
       var raw = localStorage.getItem('savoluma_session_v1');
       var session = raw ? JSON.parse(raw) : null;
-      if (!session || session.role !== 'MANAGER') {
+      if (!session || !session.token || session.role !== 'MANAGER') {
         window.location.replace('manager-login.html');
       }
     } catch (e) {
